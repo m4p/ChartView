@@ -51,9 +51,16 @@ public struct Line: View {
     // see https://stackoverflow.com/a/62370919
     // This lets geometry be recalculated when device rotates. However it doesn't cover issue of app changing
     // from full screen to split view. Not possible in SwiftUI? Feedback submitted to apple FB8451194.
+#if os(watchOS)
+    let orientationChanged = NotificationCenter.default.publisher(for: .NSCalendarDayChanged)
+        .makeConnectable()
+        .autoconnect()
+#else
     let orientationChanged = NotificationCenter.default.publisher(for: UIDevice.orientationDidChangeNotification)
         .makeConnectable()
         .autoconnect()
+#endif
+
     
 	/// The content and behavior of the `Line`.
 	/// Draw the background if showing the full line (?) and the `showBackground` option is set. Above that draw the line, and then the data indicator if the graph is currently being touched.
@@ -77,13 +84,17 @@ public struct Line: View {
                 self.frame = geometry.frame(in: .local)
 
             }
-			.onReceive(orientationChanged) { _ in
-				// When we receive notification here, the geometry is still the old value
-				// so delay evaluation to get the new frame!
-				DispatchQueue.main.async {
-					self.frame = geometry.frame(in: .local)	// recalculate layout with new frame
-				}
-			}
+            .onReceive(orientationChanged) { _ in
+#if os(watchOS)
+#else
+                // When we receive notification here, the geometry is still the old value
+                // so delay evaluation to get the new frame!
+                DispatchQueue.main.async {
+                    self.frame = geometry.frame(in: .local)    // recalculate layout with new frame
+                }
+#endif
+            }
+
 			
             .gesture(DragGesture()
                 .onChanged({ value in

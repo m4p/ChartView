@@ -57,6 +57,9 @@ public struct ChartLabel: View {
 	/// Foreground color for this label
 	/// - Returns: Color of label based on its `ChartLabelType`
     private var labelColor: Color {
+#if os(watchOS)
+        return .white
+#else
         switch labelType {
         case .title:
             return Color(UIColor.label)
@@ -69,6 +72,8 @@ public struct ChartLabel: View {
         case .custom(_, _, let color):
             return color
         }
+#endif
+
     }
 
 	/// Initialize
